@@ -131,7 +131,7 @@ def sliding_window(image):
 
 		# Identified the nonzero pixels in x and y within the window
 		good_left_indices = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xleft_low) & (nonzerox < win_xleft_high)).nonzero()[0]
-		good_right_indicess = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xright_low) & (nonzerox < win_xright_high)).nonzero()[0]
+		good_right_indices = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xright_low) & (nonzerox < win_xright_high)).nonzero()[0]
 
 
 		left_lane_indices.append(good_left_indices)
@@ -140,7 +140,7 @@ def sliding_window(image):
 
 		if len(good_left_indices) > min_pixels:
 		    left_x_current = np.int(np.mean(nonzerox[good_left_indices]))
-		if len(good_right_inds) > minpix:        
+		if len(good_right_indices) > minpix:        
 		    right_x_current = np.int(np.mean(nonzerox[good_right_indices]))
 
 	left_lane_indices = np.concatenate(left_lane_indices)
@@ -160,7 +160,7 @@ def sliding_window(image):
 	    right_fit = np.polyfit(righty, rightx, 2)
 
 	visualization_data = (rectangle_data, histogram)
-	return left_fit, right_fit, left_lane_inds, right_lane_inds, visualization_data ,leftx_base ,rightx_base 
+	return left_fit, right_fit, left_lane_indices, right_lane_indices, visualization_data ,left_x_base ,right_x_base 
 
 # Visualization
 exampleImg = cv2.imread('Test.png')
