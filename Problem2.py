@@ -55,10 +55,11 @@ def lab(image, threshold = (190,255)):
 	lab = cv2.cvtcolor(image,cv2.COLOR_RGB2Lab)
 	lab_b = lab[:,:,2]
 	if np.max(lab_b)>175:
-	lab_b = lab_b*(255/np.max(lab_b))
-	binary_out  = np.zerosl_like(lab_b)
-	binary_out[((lab_b>threshold[0])&(lab_b <= threshold[1]))]
-	return binary_out
+
+		lab_b = lab_b*(255/np.max(lab_b))
+		binary_out  = np.zerosl_like(lab_b)
+		binary_out[((lab_b>threshold[0])&(lab_b <= threshold[1]))]
+		return binary_out
 
 # Image Pipeline
 def pipeline(image):
@@ -70,36 +71,98 @@ def pipeline(image):
 	return combined_image,MinV
 
 # Kalman filter
-def kalman():
-	global kalman
-	kalman_filter = cv2.kalmanFilter(4,2)
-	kalman.measurementMatrix = np.array([[1,0,0,0],
+def Kalman():
+    global kalman
+    kalman = cv2.KalmanFilter(4,2)
+    kalman.measurementMatrix = np.array([[1,0,0,0],
                                      [0,1,0,0]],np.float32)
 
-    kalman.transitionMatrix = np.float32([[1,0,1,0],
+    kalman.transitionMatrix = np.array([[1,0,1,0],
                                         [0,1,0,1],
                                         [0,0,1,0],
-                                        [0,0,0,1]])
+                                        [0,0,0,1]],np.float32)
 
-    kalman.processNoiseCov = np.float32([[1,0,0,0],
+    kalman.processNoiseCov = np.array([[1,0,0,0],
                                        [0,1,0,0],
                                        [0,0,1,0],
-                                       [0,0,0,1]]) * 0.03
+                                       [0,0,0,1]],np.float32) * 0.03
 
-    Kalman_measurement = np.float32((2,1))
-    kalman_prediction = np.zeros((2,1), np.float32)
-
+    measurement = np.array((2,1), np.float32)
+    prediction = np.zeros((2,1), np.float32)
     
-
-# Kalman Prediction
-
-def Predict(points):
-	kalman.correct(points)
+# kalman Prediction
+def prediction(points):
+    kalman.correct(points)
     kalman_prediction = kalman.predict()
     return kalman_prediction
 
+# sliding Window
+def sliding_window(image):
+	global kalman
+	hist = np.sum(imgae[image.shape[0]//2:,:],axis = 0)
+	mid_point = np.int(hist.shape[0]//2)
+	quarter_point = np.int(midpoint//2)
+	left_x_base = np.argmax(hist[quarter_point:mid_point]) + quarter_point
+	right_x_base = np.argmax(hist[mid_point:(mid_point+quarter_point)]) + mid_point
+	Windows = 10
+	window_height = np.int(image.shape[0]/windows)
+	non_zero = image.non_zero()
+	non_zero_x = np.array(non_zero[1])
+	non_zero_y = np.array(non_zero[0])
+	right_x_current = kalman_prediction[1]
+	left_x_current = kalman_prediction[0]
+	window_margin = 80
+	min_pixels = 40
+	left_lane_indices = [] 
+	right_lane_indices = []
+	rectangle_data = []
 
-if __name__ == '__main__':
+	for window in range(windows):
+
+
+		# Identified window boundaries in x and y (and right and left)
+		win_y_low = imgage.shape[0] - (window+1)*window_height
+		win_y_high = imgage.shape[0] - window*window_height
+		win_xleft_low = left_x_current - window_margin
+		win_xleft_high = left_x_current + window_margin
+		win_xright_low = right_x_current - window_margin
+		win_xright_high = right_x_current + window_margin
+		rectangle_data.append((win_y_low, win_y_high, win_xleft_low, win_xleft_high, win_xright_low, win_xright_high))
+
+		# Identified the nonzero pixels in x and y within the window
+		good_left_indices = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xleft_low) & (nonzerox < win_xleft_high)).nonzero()[0]
+		good_right_indicess = ((nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xright_low) & (nonzerox < win_xright_high)).nonzero()[0]
+
+
+		left_lane_indices.append(good_left_indices)
+		right_lane_indices.append(good_right_indices)
+
+
+		if len(good_left_indices) > min_pixels:
+		    left_x_current = np.int(np.mean(nonzerox[good_left_indices]))
+		if len(good_right_inds) > minpix:        
+		    right_x_current = np.int(np.mean(nonzerox[good_right_indices]))
+
+	left_lane_indices = np.concatenate(left_lane_indices)
+	right_lane_indices = np.concatenate(right_lane_indices)
+
+	
+	leftx = nonzerox[left_lane_indices]
+	lefty = nonzeroy[left_lane_indices] 
+	rightx = nonzerox[right_lane_indices]
+	righty = nonzeroy[right_lane_indices] 
+
+	left_fit, right_fit = (None, None)
+
+	if len(leftx) != 0:
+	    left_fit = np.polyfit(lefty, leftx, 2)
+	if len(rightx) != 0:
+	    right_fit = np.polyfit(righty, rightx, 2)
+
+	visualization_data = (rectangle_data, histogram)
+	return left_fit, right_fit, left_lane_inds, right_lane_inds, visualization_data ,leftx_base ,rightx_base 
+
+# if __name__ == '__main__':
 	# img = np.copy(image_src)
 	# unwarp = unwarp(img)
 	# # cv2.imshow("output",unwarp)
