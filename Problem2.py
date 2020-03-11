@@ -25,7 +25,7 @@ def unwarp(image):
 
 	# To get bird's eye view
 	unwarp_image = cv2.warpPerspective(image,H,(width,height), flags= cv2.INTER_LINEAR)
-	return unwarp_image, M, MinV
+	return unwarp_image, H, MinV
 
 
 # # Output: after Unwarping the source image
@@ -43,21 +43,21 @@ def undistort(input_image):
 
 # Thresholding using HLS color space
 def hls(image, threshold = (220,255)):
-	hls = cv2.cvtcolor(image,cv2.COLOR_RGB2HLS)
+	hls = cv2.cvtColor(image,cv2.COLOR_RGB2HLS)
 	hls_l = hls[:,:,1]
 	hls_l = hls_l*(255/np.max(hls_l))
-	binary_out = np.zerosl_like(hls_l)
+	binary_out = np.zeros_like(hls_l)
 	binary_out[hls_l>threshold[0] & (hls <= threshold[1])] = 1
 	return binary_out
 
 # Thresholding using lab 
 def lab(image, threshold = (190,255)):
-	lab = cv2.cvtcolor(image,cv2.COLOR_RGB2Lab)
+	lab = cv2.cvtColor(image,cv2.COLOR_RGB2Lab)
 	lab_b = lab[:,:,2]
 	if np.max(lab_b)>175:
 
 		lab_b = lab_b*(255/np.max(lab_b))
-		binary_out  = np.zerosl_like(lab_b)
+		binary_out  = np.zeros_like(lab_b)
 		binary_out[((lab_b>threshold[0])&(lab_b <= threshold[1]))]
 		return binary_out
 
@@ -162,6 +162,42 @@ def sliding_window(image):
 	visualization_data = (rectangle_data, histogram)
 	return left_fit, right_fit, left_lane_inds, right_lane_inds, visualization_data ,leftx_base ,rightx_base 
 
+# Visualization
+exampleImg = cv2.imread('Test.png')
+exampleImg = cv2.cvtColor(exampleImg, cv2.COLOR_BGR2RGB)
+exampleImg_bin, MinV = pipeline(exampleImg)
+    
+left_fit, right_fit, left_lane_indices, right_lane_indices, visualization_data = sliding_window(exampleImg_bin)
+
+height = exampleImg.shape[0]
+left_fit_x_int = left_fit[0]*h**2 + left_fit[1]*h + left_fit[2]
+right_fit_x_int = right_fit[0]*h**2 + right_fit[1]*h + right_fit[2]
+#print('fit x-intercepts:', left_fit_x_int, right_fit_x_int)
+
+rectangles = visualization_data[0]
+histogram = visualization_data[1]
+
+# Create an output image to draw on and  visualize the result
+out_img = np.uint8(np.dstack((exampleImg_bin, exampleImg_bin, exampleImg_bin))*255)
+# Generate x and y values for plotting
+ploty = np.linspace(0, exampleImg_bin.shape[0]-1, exampleImg_bin.shape[0] )
+left_fitx = left_fit[0]*ploty**2 + left_fit[1]*ploty + left_fit[2]
+right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
+for rect in rectangles:
+# Draw the windows on the visualization image
+    cv2.rectangle(out_img,(rect[2],rect[0]),(rect[3],rect[1]),(0,255,0), 2) 
+    cv2.rectangle(out_img,(rect[4],rect[0]),(rect[5],rect[1]),(0,255,0), 2) 
+# Identify the x and y positions of all nonzero pixels in the image
+nonzero = exampleImg_bin.nonzero()
+nonzeroy = np.array(nonzero[0])
+nonzerox = np.array(nonzero[1])
+out_img[nonzeroy[left_lane_indices], nonzerox[left_lane_indices]] = [255, 0, 0]
+out_img[nonzeroy[right_lane_indices], nonzerox[right_lane_indices]] = [100, 200, 255]
+plt.imshow(out_img)
+plt.plot(left_fitx, ploty, color='yellow')
+plt.plot(right_fitx, ploty, color='yellow')
+plt.xlim(0, 1280)
+plt.ylim(720, 0)
 # if __name__ == '__main__':
 	# img = np.copy(image_src)
 	# unwarp = unwarp(img)
