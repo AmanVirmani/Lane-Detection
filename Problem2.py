@@ -25,7 +25,7 @@ def unwarp(image):
 
 	# To get bird's eye view
 	unwarp_image = cv2.warpPerspective(image,H,(width,height), flags= cv2.INTER_LINEAR)
-	return unwarp_image
+	return unwarp_image, M, MinV
 
 
 # # Output: after Unwarping the source image
@@ -41,11 +41,39 @@ def undistort(input_image):
 	undistort_image = cv2.undistort(unwarp,camera_matrix, dist_coeff, None, camera_matrix)
 	return undistort_image
 
+# Thresholding using HLS color space
+def hls(image, threshold = (220,255)):
+	hls = cv2.cvtcolor(image,cv2.COLOR_RGB2HLS)
+	hls_l = hls[:,:,1]
+	hls_l = hls_l*(255/np.max(hls_l))
+	binary_out = np.zerosl_like(hls_l)
+	binary_out[hls_l>threshold[0] & (hls <= threshold[1])] = 1
+	return binary_out
+
+# Thresholding using lab 
+def lab(image, threshold = (190,255)):
+	lab = cv2.cvtcolor(image,cv2.COLOR_RGB2Lab)
+	lab_b = lab[:,:,2]
+	if np.max(lab_b)>175:
+	lab_b = lab_b*(255/np.max(lab_b))
+	binary_out  = np.zerosl_like(lab_b)
+	binary_out[((lab_b>threshold[0])&(lab_b <= threshold[1]))]
+	return binary_out
+
+# Image Pipeline
+def pipeline(image):
+	image_unwarp,H,MinV = unwarp(image)
+	imagel_threshold = hls(image_unwarp)
+	imageb_threshold = lab(image_unwarp)
+	combined_image = np.zeros_like(imageb_threshold)
+	combined_image[(imagel_threshold == 1) | (imageb_threshold == 1)]= 1
+	return combined_image,MinV
+
 if __name__ == '__main__':
-	img = np.copy(image_src)
-	unwarp = unwarp(img)
-	# cv2.imshow("output",unwarp)
-	img1=np.copy(unwarp)
-	undistort = undistort(img1)
-	cv2.imshow("output1",undistort)
-	cv2.waitKey(0)
+	# img = np.copy(image_src)
+	# unwarp = unwarp(img)
+	# # cv2.imshow("output",unwarp)
+	# img1=np.copy(unwarp)
+	# undistort = undistort(img1)
+	# cv2.imshow("output1",undistort)
+	# cv2.waitKey(0)
