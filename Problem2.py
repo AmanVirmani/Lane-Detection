@@ -28,8 +28,24 @@ def unwarp(image):
 	return unwarp_image
 
 
-# Output: after Unwarping the source image
-img = np.copy(image_src)
-unwarp = unwarp(img)
-cv2.imshow("output",unwarp)
-cv2.waitKey(0)
+# # Output: after Unwarping the source image
+# img = np.copy(image_src)
+# unwarp = unwarp(img)
+# cv2.imshow("output",unwarp)
+# cv2.waitKey(0)
+
+# Defining Function for Undistortion of the Image
+def undistort(input_image):
+	camera_matrix = np.array([[9.037596e+02, 0.000000e+00, 6.957519e+02], [0.000000e+00, 9.019653e+02, 2.242509e+02], [0.000000e+00, 0.000000e+00, 1.000000e+00]])
+	dist_coeff = np.array([[-3.639558e-01, 1.788651e-01, 6.029694e-04, -3.922424e-04, -5.382460e-02]])
+	undistort_image = cv2.undistort(unwarp,camera_matrix, dist_coeff, None, camera_matrix)
+	return undistort_image
+
+if __name__ == '__main__':
+	img = np.copy(image_src)
+	unwarp = unwarp(img)
+	# cv2.imshow("output",unwarp)
+	img1=np.copy(unwarp)
+	undistort = undistort(img1)
+	cv2.imshow("output1",undistort)
+	cv2.waitKey(0)
