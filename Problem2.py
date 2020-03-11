@@ -69,6 +69,36 @@ def pipeline(image):
 	combined_image[(imagel_threshold == 1) | (imageb_threshold == 1)]= 1
 	return combined_image,MinV
 
+# Kalman filter
+def kalman():
+	global kalman
+	kalman_filter = cv2.kalmanFilter(4,2)
+	kalman.measurementMatrix = np.array([[1,0,0,0],
+                                     [0,1,0,0]],np.float32)
+
+    kalman.transitionMatrix = np.float32([[1,0,1,0],
+                                        [0,1,0,1],
+                                        [0,0,1,0],
+                                        [0,0,0,1]])
+
+    kalman.processNoiseCov = np.float32([[1,0,0,0],
+                                       [0,1,0,0],
+                                       [0,0,1,0],
+                                       [0,0,0,1]]) * 0.03
+
+    Kalman_measurement = np.float32((2,1))
+    kalman_prediction = np.zeros((2,1), np.float32)
+
+    
+
+# Kalman Prediction
+
+def Predict(points):
+	kalman.correct(points)
+    kalman_prediction = kalman.predict()
+    return kalman_prediction
+
+
 if __name__ == '__main__':
 	# img = np.copy(image_src)
 	# unwarp = unwarp(img)
