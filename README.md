@@ -30,11 +30,11 @@ $ cd Desktop/moumita_proj_2/Codes
 
 To run the code for the problem 1:
 ```` 
-Problem1.py
+Problem1.py "-v", "--video_path", required=False, help="Path for input video", default='NightDrive-2689.mp4', type=str
 ````
 To run the code for problem 2: 
 ````
-Problem2.py
+Problem2.py -i", "--image_path", required=False, help="Path for input images", default='../data/data_1/data/', type=str
 
 
 
