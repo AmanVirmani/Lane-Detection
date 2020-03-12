@@ -12,8 +12,11 @@ Lane Detected to mimic Lane Departure Warning systems used in Self driving cars.
 
 ## Dependencies 
 python3
+
 numpy 1.1 
+
 OpenCV
+
 MoviePy
 
 
@@ -25,13 +28,12 @@ MoviePy
   
 $ cd Desktop/moumita_proj_2/Codes
 
- To run the code for the problem 1:
-````
+To run the code for the problem 1:
+```` 
 Problem1.py
-
-
+````
 To run the code for problem 2: 
-
+````
 Problem2.py
 
 
