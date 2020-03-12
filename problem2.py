@@ -119,16 +119,18 @@ def detectLanes(img, hist,mask):
 		right_fit = np.polyfit(righty, rightx, 2)
 
 	if left_fit is None or right_fit is None:
-		print('no fit')
-		return
+		text ='no fit'
+		return None, text
 	plot_xleft, plot_yleft, plot_xright, plot_yright = get_poly_points(img, left_fit, right_fit)
 
 	## Color the detected pixels for each lane line
 	final_mask = np.zeros(mask.shape)
+	#for i in range(len(left_lane_inds)):
+	#	final_mask[plot_yleft[i], left_lane_inds[i]] = [255]
+	#	final_mask[plot_yright[i], right_lane_inds[i]] = [255]
+
 	final_mask[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255]
 	final_mask[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [255]
-	#final_mask[plot_yleft, left_lane_inds] = [255]
-	#final_mask[plot_yright, right_lane_inds] = [255]
 	out[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
 	out[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [255, 10, 255]
 
@@ -138,7 +140,7 @@ def detectLanes(img, hist,mask):
 	## Plot the fitted polynomial
 	cv2.polylines(out, np.int32([left_poly_pts]), isClosed=False, color=(200,255,155), thickness=4)
 	cv2.polylines(out, np.int32([right_poly_pts]), isClosed=False, color=(200,255,155), thickness=4)
-	cv2.imshow('out',out);cv2.waitKey(0)
+	#cv2.imshow('out',out);cv2.waitKey(0)
 
 	if (left_fit[1] + right_fit[1]) / 2 > 0.05:
 		text = 'Left turn'
@@ -147,15 +149,17 @@ def detectLanes(img, hist,mask):
 	else:
 		text = 'Straight'
 	print(text)
-	return final_mask.astype(np.uint8)
+	return final_mask.astype(np.uint8),text
 
 
 def plotLanes(src, img, mask,invM):
 	hist = np.sum(mask,axis=0)
-	mask = detectLanes(img, hist,mask)
+	#plt.plot(hist)
+	#plt.show()
+	mask,text = detectLanes(img, hist,mask)
 	if mask is None:
 		return None
-	cv2.imshow('final mask',mask);cv2.waitKey(0)
+	#cv2.imshow('final mask',mask);cv2.waitKey(0)
 	hist = np.sum(mask,axis=0)
 	for i in range(len(hist)):
 		if hist[i]:
@@ -178,6 +182,7 @@ def plotLanes(src, img, mask,invM):
 	mask_3d[:,:,2] = org_mask
 	img_masked = cv2.bitwise_and(src, mask_3d)
 	final_image = cv2.add(img_masked, org)
+	final_image = cv2.putText(final_image,text, (int(final_image.shape[1]/2)-50,100), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2,cv2.LINE_AA)
 	return final_image
 
 
@@ -195,7 +200,7 @@ def main(args):
 		(300,0),
 		(300,300)
 	])
-
+	images = []
 	K,D = readCamParams(args['cam_params'])
 	images = glob.glob(args['image_path']+'/*')
 	images.sort()
@@ -208,16 +213,16 @@ def main(args):
 		#cv2.imshow('after denoising',dst); cv2.waitKey(0);
 
 		img, M, invM = warpImage(img,src_pts,dst_pts)
-		cv2.imshow("bird's eye", img); cv2.waitKey(0)
+		#cv2.imshow("bird's eye", img); cv2.waitKey(0)
 
 		mask = getLaneMask(img)
-		cv2.imshow('lane', mask);cv2.waitKey(0)
+		#cv2.imshow('lane', mask);cv2.waitKey(0)
 		final_image = plotLanes(frame, img, mask, invM)
 		if final_image is None:
 			continue
-		cv2.imshow('final', final_image); cv2.waitKey(10)
-
-		#break
+		cv2.imshow('final', final_image); cv2.waitKey(5)
+		images.append(final_image)
+	saveVideo(images,'data_1_lane_detection.avi')
 
 def get_poly_points(img, left_fit, right_fit):
 	'''
@@ -256,6 +261,7 @@ def main2(args):
 		(300,0),
 		(300,300)
 	])
+	images= []
 	cap = cv2.VideoCapture(args['video_path'])
 	K,D = readCamParams(args['cam_params'])
 	if (cap.isOpened() == False):
@@ -266,17 +272,26 @@ def main2(args):
 			dst = processImage(frame.copy(),K,D)
 
 			img, M, invM = warpImage(dst, src_pts, dst_pts)
-			cv2.imshow("bird's eye",img); cv2.waitKey(0)
+			#cv2.imshow("bird's eye",img); cv2.waitKey(0)
 
 			mask = getLaneMask(img)
-			cv2.imshow('lane_detect', mask);cv2.waitKey(0)
+			#cv2.imshow('lane_detect', mask);cv2.waitKey(0)
 
 			final_image = plotLanes(frame,img, mask, invM)
 			if final_image is None:
 				continue
-			cv2.imshow('final',final_image);cv2.waitKey(0)
+			cv2.imshow('final',final_image);cv2.waitKey(5)
+			images.append(final_image)
 		else:
 			break
+	saveVideo(images,'data_2_lane_detection.avi')
+
+def saveVideo(images,output) :
+	h,w = images[0].shape[:2]
+	out = cv2.VideoWriter(output,cv2.VideoWriter_fourcc('M','J','P','G') , 10, (w,h))
+	for img in images:
+		out.write(img)
+	out.release()
 
 if __name__=='__main__':
 	ap = argparse.ArgumentParser()
@@ -285,6 +300,6 @@ if __name__=='__main__':
 	ap.add_argument("-v", "--video_path", required=False, help="Path for input video", default='../data/data_2/challenge_video.mp4', type=str)
 	args = vars(ap.parse_args())
 
-	main(args)
-	#main2(args)
+	#main(args)
+	main2(args)
 
