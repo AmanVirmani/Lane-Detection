@@ -1,6 +1,6 @@
 # Lane Detcetion
 
-## This Project consist of 2 problems 
+## This Project consists of 2 problems 
 
 ### Problem 1 : 
 Improved the quality of the video sequence of a given video.
@@ -28,9 +28,10 @@ $ cd Desktop/moumita_proj_2/Codes
  To run the code for the problem 1:
 ````
 Problem1.py
-```
+
+
 To run the code for problem 2: 
-```
+
 Problem2.py
 
 
