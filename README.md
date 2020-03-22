@@ -22,23 +22,16 @@ MoviePy
 
 ## Run the code
 
-1. Extract moumita_proj_2 folder on desktop
-
-2.Go to Codes folder
-  
-$ cd Desktop/moumita_proj_2/Codes
-
 To run the code for the problem 1:
 
 ```` 
 python Problem1.py -v <Path for input video>
 ````
-Problem 2 with videos
-
+Problem 2 with videos:
 ```` 
 python Problem2.py -v <Path for input video>
 ````
-To run the code for problem 2 with photos: 
+To run the code for problem 2 with images: 
 ````
 python Problem2.py -i <Path for input images>
 
